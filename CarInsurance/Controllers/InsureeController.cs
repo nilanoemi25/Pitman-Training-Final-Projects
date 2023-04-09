@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -6,7 +7,9 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Routing;
 using CarInsurance.Models;
+using CarInsurance.ViewModels;
 
 namespace CarInsurance.Controllers
 {
@@ -19,7 +22,32 @@ namespace CarInsurance.Controllers
         {
             return View(db.Insurees.ToList());
 
-        
+        }
+
+        public ActionResult Admin()
+        {
+            //trying to create view model 
+
+            using (InsuranceEntities db = new InsuranceEntities())
+            {
+                var insurees = db.Insurees;
+                var InsuranceVMs = new List<InsuranceVM>();
+                foreach (var insuree in insurees)
+                {
+                    var InsuranceVM = new InsuranceVM();       
+                    InsuranceVM.FirstName = insuree.FirstName;
+                    InsuranceVM.LastName = insuree.LastName;
+                    InsuranceVM.EmailAddress = insuree.EmailAddress;
+                    InsuranceVM.Quote = insuree.Quote; 
+                    
+                    InsuranceVMs.Add(InsuranceVM);
+                }
+
+
+                return View();
+            }
+
+
         }
 
         // GET: Insuree/Details/5
@@ -50,94 +78,94 @@ namespace CarInsurance.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "Id,FirstName,LastName,EmailAddress,DateOfBirth,CarYear,CarMake,CarModel,DUI,SpeedingTickets,CoverageType,Quote")] Insuree insuree)
         {
-            int Id = insuree.Id;
-            string FirstName = insuree.FirstName;
-            string LastName = insuree.LastName;
-            string EmailAddress = insuree.EmailAddress;
-            DateTime DateOfBirth = insuree.DateOfBirth;
-            int CarYear = insuree.CarYear;
-            string CarMake = insuree.CarMake;
-            string CarModel = insuree.CarModel;
-            bool DUI = insuree.DUI;
-            int SpeedingTickets = insuree.SpeedingTickets;
-            bool CoverageType = insuree.CoverageType;
-            decimal Qoute = insuree.Quote;
 
-            CarMake = CarMake.ToLower(); 
-            decimal QouteDefault = 50.00m;
-            Qoute = QouteDefault;
-            double age = (DateTime.Now - DateOfBirth).TotalDays / 365.242199; 
-
-            if(age <= 18)
+            using (InsuranceEntities db = new InsuranceEntities())
             {
-                Qoute += 100.00m;
-            }
+                if (string.IsNullOrEmpty(insuree.Quote.ToString())) 
+                {
+                    insuree.Quote = 50.00m;
+                    db.Insurees.Add(insuree);
+                    db.SaveChanges(); 
+                }
 
-            if((age > 19 ) && (age <25)) 
-            {
-                Qoute += 50.00m; 
-            }
+                else
+                {
+ 
+                    insuree.CarMake= insuree.CarMake.ToLower();
 
-            if(age > 25)
-            {
-                Qoute += 25.00m;
-            }
+                    double age = (DateTime.Now - insuree.DateOfBirth).TotalDays / 365.242199;
+
+                    if (age <= 18)
+                    {
+                        insuree.Quote += 100.00m;
+                    }
+
+                    if ((age > 19) && (age < 25))
+                    {
+                        insuree.Quote += 50.00m;
+                    }
+
+                    if (age > 25)
+                    {
+                        insuree.Quote 
+                        += 25.00m;
+                    }
 
 
-            if (CarYear < 2000)
-            {
-                Qoute += 25.00m;
-            }
+                    if (insuree.CarYear < 2000)
+                    {
+                        insuree.Quote += 25.00m;
+                    }
 
 
-            if (CarYear < 2015)
-            {
-                Qoute += 25.00m;
-            }
+                    if (insuree.CarYear < 2015)
+                    {
+                        insuree.Quote += 25.00m;
+                    }
 
-            if (CarMake == "porsche")
-            {
-                Qoute += 25.00m;
-            }
+                    if (insuree.CarMake == "porsche")
+                    {
+                        insuree.Quote += 25.00m;
+                    }
 
-            if ((CarMake == "porsche") && (CarModel == "911 Carrera"))
-            {
-                Qoute += 25.00m;
-            }
+                    if ((insuree.CarMake == "porsche") && (insuree.CarModel == "911 Carrera"))
+                    {
+                        insuree.Quote += 25.00m;
+                    }
 
-            if(SpeedingTickets > 0)
-            {
-                Qoute += (SpeedingTickets * 10.00m);
-            }
+                    if (insuree.SpeedingTickets > 0)
+                    {
+                        insuree.Quote += (insuree.SpeedingTickets * 10.00m);
+                    }
 
-            if(DUI = true)
-            {
-                Qoute += (Qoute * 25 / 100);
-            }
+                    if (insuree.DUI == true)
+                    {
+                        insuree.Quote += (insuree.Quote * 25 / 100);
+                    }
 
-            if(CoverageType = true)
-            {
-                Qoute += (Qoute * 50 / 100);
-            }
+                    if (insuree.CoverageType == true)
+                    {
+                       insuree.Quote += (insuree.Quote * 50 / 100);
+                    }
 
-           
+                }
 
-            if (ModelState.IsValid)
-            {
+            } 
+
+
+                if (ModelState.IsValid)
+                 {
                 db.Insurees.Add(insuree);
                 db.SaveChanges();
-               // return RedirectToAction("Index");
-            }
-
-
+                return RedirectToAction("Index");
+                 }
 
 
 
             return View(insuree);
-        }
 
-        
-            
+
+        }
 
 
 
