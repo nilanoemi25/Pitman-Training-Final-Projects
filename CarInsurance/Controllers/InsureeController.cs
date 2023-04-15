@@ -30,7 +30,9 @@ namespace CarInsurance.Controllers
 
             using (InsuranceEntities db = new InsuranceEntities())
             {
-                var insurees = db.Insurees;
+                // Lambda function to pull only those above 0. 
+                // var insurees = db.Insurees 
+                var insurees = db.Insurees.Where(x => x.Quote >= 0).ToList();
                 var InsuranceVMs = new List<InsuranceVM>();
                 foreach (var insuree in insurees)
                 {
@@ -44,7 +46,7 @@ namespace CarInsurance.Controllers
                 }
 
 
-                return View();
+                return View(InsuranceVMs);
             }
 
 
